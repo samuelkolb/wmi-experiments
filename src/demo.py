@@ -1,12 +1,15 @@
+import traceback
+
 import pywmi
 import pysmt.shortcuts as smt
+from pywmi.engines.xsdd.xsdd import XsddEngine
 
 
 def get_problem():
-    domain = pywmi.Domain.make([], ["x", "y"], [(-1, 1), (-1, 1)])
+    domain = pywmi.Domain.make([], ["x", "y"], [(-1.0, 1.0), (-1.0, 1.0)])
     x, y = domain.get_symbols(["x", "y"])
-    formula = (x >= 0) & (x <= y) & (y <= 1)
-    return domain, formula, smt.Real(1)
+    formula = (x >= 0.0) & (x <= y) & (y <= 1.0)
+    return domain, formula, smt.Real(1.0)
 
 
 def rejection():
@@ -19,8 +22,13 @@ def xadd():
     return pywmi.XaddEngine(domain, formula, weight).compute_volume()
 
 
+def xsdd():
+    domain, formula, weight = get_problem()
+    return XsddEngine(domain, formula, weight).compute_volume([smt.TRUE()])
+
+
 def main():
-    methods = [("rejection", rejection), ("XADD", xadd)]
+    methods = [("rejection", rejection), ("XADD", xadd), ("XSDD", xsdd)]
     for name, method in methods:
         print("Running {} engine".format(name))
         try:
@@ -28,6 +36,7 @@ def main():
             print("\tObtained {}".format(result))
         except Exception as e:
             print("\tFailed ({})".format(e))
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
