@@ -14,17 +14,17 @@ def get_problem():
 
 def rejection():
     domain, formula, weight = get_problem()
-    return pywmi.RejectionEngine(domain, formula, weight, 100000).compute_volume()
+    return pywmi.RejectionEngine(domain, formula, weight, 100000).compute_probability(domain.get_symbol("x") <= 0.5)
 
 
 def xadd():
     domain, formula, weight = get_problem()
-    return pywmi.XaddEngine(domain, formula, weight).compute_volume()
+    return pywmi.XaddEngine(domain, formula, weight).compute_probability(domain.get_symbol("x") <= 0.5)
 
 
 def xsdd():
     domain, formula, weight = get_problem()
-    return XsddEngine(domain, formula, weight).compute_volume([smt.TRUE()])
+    return XsddEngine(domain, formula, weight).compute_volume([domain.get_symbol("x") <= 0.5])
 
 
 def main():
