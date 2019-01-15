@@ -2,7 +2,7 @@ import traceback
 
 import pywmi
 import pysmt.shortcuts as smt
-from pywmi.engines.xsdd.xsdd import XsddEngine
+from pywmi import XsddEngine
 
 
 def get_problem():
@@ -24,7 +24,7 @@ def xadd():
 
 def xsdd():
     domain, formula, weight = get_problem()
-    return XsddEngine(domain, formula, weight).compute_volume([domain.get_symbol("x") <= 0.5])
+    return XsddEngine(domain, formula, weight, repeated=True).compute_probabilities([domain.get_symbol("x") <= 0.5, domain.get_symbol("x") <= 1.0])
 
 
 def main():
