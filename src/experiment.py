@@ -3,7 +3,7 @@ import os
 from pywmi.__main__ import get_engine
 from pywmi.domain import Density
 
-from pydora.experiment import Experiment, Result, Parameter, derived
+from autodora.experiment import Experiment, Result, Parameter, derived
 import pysmt.shortcuts as smt
 
 

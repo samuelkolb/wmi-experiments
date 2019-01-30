@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
 
-from pydora.trajectory import product
-from pydora.runner import CommandLineRunner
-from pydora.sql_storage import SqliteStorage
+from autodora.trajectory import product
+from autodora.runner import CommandLineRunner
+from autodora.sql_storage import SqliteStorage
 from experiment import VolumeExperiment
 
 

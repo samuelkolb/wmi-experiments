@@ -107,7 +107,7 @@ def main():
             raise ValueError("No problem with name {}".format(args.problem_name))
 
         default_name = "generated_{}_{}.json".format(args.problem_name, size)
-        if os.path.exists(args.output_file):
+        if args.output_file and os.path.exists(args.output_file):
             if os.path.isfile(args.output_file):
                 output_file = args.output_file
             else:
