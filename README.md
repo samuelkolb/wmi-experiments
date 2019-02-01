@@ -6,4 +6,5 @@ TODO
 TODO
 
 ## Click graph
-TODO
+A small probabilistic problem with a factorized weight function.
+Check the [wiki page](https://github.com/samuelkolb/wmi-experiments/wiki/Click-graph) for details.
