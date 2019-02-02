@@ -85,6 +85,44 @@ def generate_mutual_exclusive(n):
     return flip_domain(domain), bounds & disjunction, smt.Real(1.0)
 
 
+def generate_click_graph(n):
+    """
+    Real: sa (=similarityAll), b_ij (=b(i, j)), i=0, ..., n
+    Bool: s_i (=sim(i)), cl_ij (=cl(i, j)), c_ij (=clicks(i, j)), i=0, ..., n
+    """
+    domain = Domain.make(
+        # Boolean
+        ["s_{}".format(i) for i in range(n)]
+        + ["cl_{}{}".format(i, j) for i in range(n) for j in (0, 1)]
+        + ["c_{}{}".format(i, j) for i in range(n) for j in (0, 1)]
+        + ["aux_{}{}".format(i, j) for i in range(n) for j in (0, 1)],
+        # Real
+        ["sa"]
+        + ["b_{}{}".format(i, j) for i in range(n) for j in (0, 1)],
+        real_bounds=(0, 1)
+    )
+    s = [domain.get_symbol("s_{}".format(i)) for i in range(n)]
+    cl = [[domain.get_symbol("cl_{}{}".format(i, j)) for j in (0, 1)] for i in range(n)]
+    c = [[domain.get_symbol("c_{}{}".format(i, j)) for j in (0, 1)] for i in range(n)]
+    aux = [[domain.get_symbol("aux_{}{}".format(i, j)) for j in (0, 1)] for i in range(n)]
+    sa = domain.get_symbol("sa")
+    b = [[domain.get_symbol("b_{}{}".format(i, j)) for j in (0, 1)] for i in range(n)]
+
+    support = smt.And([
+        smt.Iff(cl[i][0], c[i][0] & aux[i][0])
+        & smt.Iff(cl[i][1], (c[i][1] & s[i] & aux[i][0]) | (c[i][1] & ~s[i] & aux[i][1]))
+        for i in range(n)])
+
+    one = smt.Real(1)
+    zero = smt.Real(0)
+    t = lambda c: smt.Ite(c, one, zero)
+    w_s = [smt.Ite(s_i, t(sa >= 0) * t(sa <= 1), one) for s_i in s]
+    w_aux = [smt.Ite(aux[i][j], t(b[i][j] >= 0) * t(b[i][j] <= 1), one) for i in range(n) for j in (0, 1)]
+
+    weight = smt.Times(*w_s + w_aux)
+
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("problem_name", choices=["xor", "mutex"])
