@@ -12,7 +12,7 @@ def main():
     args = parser.parse_args()
 
     if args.problem == "xor":
-        problem_dict = {"problem": [f"xor_{i}" for i in range(1, 2)]}
+        problem_dict = {"problem": [f"xor_{i}" for i in range(1, 21)]}
         solver_dict = {"solver": [
             "xadd:moriginal",
             "xadd:mresolve",
@@ -25,8 +25,8 @@ def main():
         trajectory = VolumeExperiment.explore("xor", product(problem_dict, solver_dict))
 
         storage = SqliteStorage()
-        # storage.remove("xor")
-        CommandLineRunner(trajectory, storage, timeout=60).run()
+        storage.remove("xor")
+        CommandLineRunner(trajectory, storage, 3, timeout=60).run()
     elif args.problem == "mutex":
         problem_dict = {"problem": [f"mutex_{i}" for i in range(1, 21)]}
         solver_dict = {"solver": [
