@@ -63,7 +63,7 @@ def generate_xor(n):
     terms = [x <= v for v in symbols]
     xor = smt.FALSE()
     for term in terms:
-        xor = smt.Xor(xor, term)
+        xor = (xor | term) & ~(xor & term)
 
     return Density(flip_domain(domain), bounds & xor, smt.Real(1.0))
 
