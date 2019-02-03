@@ -65,7 +65,7 @@ def generate_xor(n):
     for term in terms:
         xor = smt.Xor(xor, term)
 
-    return Domain(flip_domain(domain), bounds & xor, smt.Real(1.0))
+    return Density(flip_domain(domain), bounds & xor, smt.Real(1.0))
 
 
 def generate_mutual_exclusive(n):
@@ -82,7 +82,7 @@ def generate_mutual_exclusive(n):
         for j in range(i + 1, n):
             disjunction &= ~terms[i] | ~terms[j]
 
-    return Domain(flip_domain(domain), bounds & disjunction, smt.Real(1.0))
+    return Density(flip_domain(domain), bounds & disjunction, smt.Real(1.0))
 
 
 def generate_click_graph(n):
