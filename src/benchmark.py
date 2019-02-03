@@ -2,9 +2,9 @@ import argparse
 import os
 
 import pysmt.shortcuts as smt
+
 from pywmi import Domain
 from pywmi.domain import Density
-from pywmi.smt_print import pretty_print
 
 
 def make_domain(n):
@@ -65,7 +65,7 @@ def generate_xor(n):
     for term in terms:
         xor = smt.Xor(xor, term)
 
-    return flip_domain(domain), bounds & xor, smt.Real(1.0)
+    return Domain(flip_domain(domain), bounds & xor, smt.Real(1.0))
 
 
 def generate_mutual_exclusive(n):
@@ -82,7 +82,7 @@ def generate_mutual_exclusive(n):
         for j in range(i + 1, n):
             disjunction &= ~terms[i] | ~terms[j]
 
-    return flip_domain(domain), bounds & disjunction, smt.Real(1.0)
+    return Domain(flip_domain(domain), bounds & disjunction, smt.Real(1.0))
 
 
 def generate_click_graph(n):
@@ -119,13 +119,13 @@ def generate_click_graph(n):
     w_s = [smt.Ite(s_i, t(sa >= 0) * t(sa <= 1), one) for s_i in s]
     w_aux = [smt.Ite(aux[i][j], t(b[i][j] >= 0) * t(b[i][j] <= 1), one) for i in range(n) for j in (0, 1)]
 
-    weight = smt.Times(*w_s + w_aux)
-
+    weight = smt.Times(*(w_s + w_aux))
+    return Density(domain, support, weight)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("problem_name", choices=["xor", "mutex"])
+    parser.add_argument("problem_name", choices=["xor", "mutex", "click"])
     parser.add_argument("-n", "--size", type=str)
     parser.add_argument("-w", "--output_file", default=None)
     args = parser.parse_args()
@@ -138,9 +138,11 @@ def main():
 
     for size in sizes:
         if args.problem_name == "xor":
-            domain, formula, weight = generate_xor(size)
+            density = generate_xor(size)
         elif args.problem_name == "mutex":
-            domain, formula, weight = generate_mutual_exclusive(size)
+            density = generate_mutual_exclusive(size)
+        elif args.problem_name == "click":
+            density = generate_click_graph(size)
         else:
             raise ValueError("No problem with name {}".format(args.problem_name))
 
@@ -153,7 +155,7 @@ def main():
         else:
             output_file = default_name
 
-        Density(domain, formula, weight).export_to(output_file)
+        density.to_file(output_file)
 
 
 if __name__ == "__main__":
