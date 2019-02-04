@@ -86,40 +86,40 @@ def generate_mutual_exclusive(n):
 
 
 def generate_click_graph(n):
-    """
-    Real: sa (=similarityAll), b_ij (=b(i, j)), i=0, ..., n
-    Bool: s_i (=sim(i)), cl_ij (=cl(i, j)), c_ij (=clicks(i, j)), i=0, ..., n
-    """
+    def t(c):
+        return smt.Ite(c, one, zero)
+
+    sim_n, cl_n, b_n, sim_x_n, b_x_n = "sim", "cl", "b", "sim_x", "b_x"
     domain = Domain.make(
         # Boolean
-        ["s_{}".format(i) for i in range(n)]
-        + ["cl_{}{}".format(i, j) for i in range(n) for j in (0, 1)]
-        + ["c_{}{}".format(i, j) for i in range(n) for j in (0, 1)]
-        + ["aux_{}{}".format(i, j) for i in range(n) for j in (0, 1)],
+        ["{}_{}".format(sim_n, i) for i in range(n)]
+        + ["{}_{}_{}".format(cl_n, i, j) for i in range(n) for j in (0, 1)]
+        + ["{}_{}_{}".format(b_n, i, j) for i in range(n) for j in (0, 1)],
         # Real
-        ["sa"]
-        + ["b_{}{}".format(i, j) for i in range(n) for j in (0, 1)],
+        ["{}".format(sim_x_n)]
+        + ["{}_{}_{}".format(b_x_n, i, j) for i in range(n) for j in (0, 1)],
         real_bounds=(0, 1)
     )
-    s = [domain.get_symbol("s_{}".format(i)) for i in range(n)]
-    cl = [[domain.get_symbol("cl_{}{}".format(i, j)) for j in (0, 1)] for i in range(n)]
-    c = [[domain.get_symbol("c_{}{}".format(i, j)) for j in (0, 1)] for i in range(n)]
-    aux = [[domain.get_symbol("aux_{}{}".format(i, j)) for j in (0, 1)] for i in range(n)]
-    sa = domain.get_symbol("sa")
-    b = [[domain.get_symbol("b_{}{}".format(i, j)) for j in (0, 1)] for i in range(n)]
+    sim = [domain.get_symbol("{}_{}".format(sim_n, i)) for i in range(n)]
+    cl = [[domain.get_symbol("{}_{}_{}".format(cl_n, i, j)) for j in (0, 1)] for i in range(n)]
+    b = [[domain.get_symbol("{}_{}_{}".format(b_n, i, j)) for j in (0, 1)] for i in range(n)]
+    sim_x = domain.get_symbol("{}".format(sim_x_n))
+    b_x = [[domain.get_symbol("{}_{}_{}".format(b_x_n, i, j)) for j in (0, 1)] for i in range(n)]
 
     support = smt.And([
-        smt.Iff(cl[i][0], c[i][0] & aux[i][0])
-        & smt.Iff(cl[i][1], (c[i][1] & s[i] & aux[i][0]) | (c[i][1] & ~s[i] & aux[i][1]))
-        for i in range(n)])
+        smt.Iff(cl[i][0], b[i][0])
+        & smt.Iff(cl[i][1], (sim[i] & b[i][0]) | (~sim[i] & b[i][1]))
+        for i in range(n)
+    ])
 
     one = smt.Real(1)
     zero = smt.Real(0)
-    t = lambda c: smt.Ite(c, one, zero)
-    w_s = [smt.Ite(s_i, t(sa >= 0) * t(sa <= 1), one) for s_i in s]
-    w_aux = [smt.Ite(aux[i][j], t(b[i][j] >= 0) * t(b[i][j] <= 1), one) for i in range(n) for j in (0, 1)]
+    w_sim_x = t(sim_x >= 0) * t(sim_x <= 1)
+    w_sim = [smt.Ite(s_i, sim_x, 1 - sim_x) for s_i in sim]
+    w_b_x = [t(b_x[i][j] >= 0) * t(b_x[i][j] <= 1) for i in range(n) for j in (0, 1)]
+    w_b = [smt.Ite(b[i][j], b_x[i][j], 1 - b_x[i][j]) for i in range(n) for j in (0, 1)]
 
-    weight = smt.Times(*(w_s + w_aux))
+    weight = smt.Times(*([w_sim_x] + w_sim + w_b_x + w_b))
     return Density(domain, support, weight)
 
 

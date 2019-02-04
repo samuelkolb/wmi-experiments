@@ -8,19 +8,21 @@ import pysmt.shortcuts as smt
 
 
 class VolumeExperiment(Experiment):
-    problem = Parameter(str, None, "The problem filename")
+    problem = Parameter(str, None, "The problem name or filename")
     solver = Parameter(str, None, "The solver")
     volumes = Result(list, None, "The calculated volume")
 
-    @derived
+    @derived(cache=True)
     def filename(self):
         problem = self["problem"]
         if problem.startswith("xor") and "." not in problem:
             return os.path.join(os.path.dirname(os.path.dirname(__file__)), "res", "xor", f"generated_{problem}.json")
         elif problem.startswith("mutex") and "." not in problem:
             return os.path.join(os.path.dirname(os.path.dirname(__file__)), "res", "mutex", f"generated_{problem}.json")
+        elif problem.startswith("sequential"):
+            return os.path.join(os.path.dirname(os.path.dirname(__file__)), "res", "queries", f"{problem}")
 
-    @derived
+    @derived(cache=True)
     def n(self):
         problem = self["problem"]
         if problem.startswith("xor") and "." not in problem:
@@ -30,7 +32,7 @@ class VolumeExperiment(Experiment):
         return -1
 
     def run_internal(self):
-        density = Density.import_from(self["filename"])
+        density = Density.from_file(self["filename"])
         solver = get_engine(self["solver"], density.domain, density.support, density.weight)
         if not density.queries or (len(density.queries) == 1 and density.queries[0] == smt.TRUE()):
             self["volumes"] = [solver.compute_volume()]
